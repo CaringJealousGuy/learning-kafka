@@ -1,0 +1,7 @@
+docker exec kafka-1 /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka-1:29092 --create --topic messages --partitions 3 --replication-factor 2
+
+Topic: messages TopicId: hDzRryrOSuWUKbce32eZ9g PartitionCount: 3       ReplicationFactor: 2    Configs: min.insync.replicas=1
+                                                                                            
+Topic: messages Partition: 0    Leader: 1       Replicas: 1,2   Isr: 1,2        Elr:    LastKnownElr:
+Topic: messages Partition: 1    Leader: 2       Replicas: 2,1   Isr: 2,1        Elr:    LastKnownElr:
+Topic: messages Partition: 2    Leader: 1       Replicas: 1,2   Isr: 1,2        Elr:    LastKnownElr: 

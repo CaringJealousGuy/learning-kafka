@@ -5,6 +5,7 @@ from kafka import KafkaConsumer
 from serializer import deserialize_message
 
 
+# Настройка логирования ошибок и основных событий Consumer.
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -13,6 +14,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# Consumer читает topic "messages" в отдельной consumer group.
+# auto_offset_reset="earliest" — при отсутствии сохранённого offset
+# начинать чтение с начала topic.
+# Auto commit включён: offsets автоматически фиксируются Kafka.
 consumer = KafkaConsumer(
     "messages",
     bootstrap_servers=["kafka-1:29092", "kafka-2:29093"],
@@ -22,6 +27,8 @@ consumer = KafkaConsumer(
 )
 
 
+# Основной цикл Consumer: получает сообщения, десериализует и обрабатывает
+# их по одному. Ошибка одного сообщения не останавливает Consumer.
 def run():
     try:
         while True:

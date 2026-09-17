@@ -7,6 +7,8 @@ from kafka import KafkaProducer
 from message import Message
 from serializer import serialize_message
 
+
+# Настройка логирования результатов отправки и ошибок.
 logging.basicConfig(
     filename="producer.log",
     level=logging.INFO,
@@ -16,12 +18,18 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# Producer подключается к обоим брокерам Kafka.
+# acks="all" и retries=5 обеспечивают At Least Once delivery:
+# Kafka подтверждает запись, а при ошибке Producer повторяет отправку.
 producer = KafkaProducer(
     bootstrap_servers=["kafka-1:29092", "kafka-2:29093"],
     acks="all",
     retries=5,
 )
 
+
+# Основной цикл Producer: создаёт сообщения и асинхронно отправляет их
+# в topic "messages", после чего ждёт 1 секунду перед следующим сообщением.
 def run():
     try:
         message_number = 1
@@ -42,6 +50,8 @@ def run():
                 value=serialize_message(message),
             )
 
+            # Callback вызывается после успешной отправки и записывает
+            # в лог topic, partition и offset сообщения.
             def on_send_success(record_metadata):
                 logger.info(
                     "Message sent: topic=%s, partition=%s, offset=%s",
@@ -50,6 +60,7 @@ def run():
                     record_metadata.offset,
                 )
 
+            # Errback вызывается при ошибке отправки.
             def on_send_error(exception):
                 logger.error(
                     "Error sending message: %s",
@@ -61,13 +72,16 @@ def run():
 
             message_number += 1
             time.sleep(1)
+
+    # Корректно завершаем Producer при остановке приложения.
     except KeyboardInterrupt:
         logger.info("Producer stopped by user")
 
     finally:
         producer.flush()
         producer.close()
-        logger.info("Producer closed")  
+        logger.info("Producer closed")
+
 
 if __name__ == "__main__":
     run()

@@ -4,6 +4,8 @@ from kafka import KafkaConsumer
 
 from serializer import deserialize_message
 
+
+# Настройка логирования ошибок и основных событий Consumer.
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
@@ -12,6 +14,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+# Consumer читает topic "messages" в отдельной consumer group.
+# auto_offset_reset="earliest" — при отсутствии сохранённого offset
+# начинать чтение с начала topic.
+# Auto commit отключён: offset подтверждается вручную после обработки batch.
+# max_poll_records ограничивает размер batch.
+# fetch_min_bytes и fetch_max_wait_ms позволяют настроить ожидание данных
+# перед получением batch.
 consumer = KafkaConsumer(
     "messages",
     bootstrap_servers=["kafka-1:29092", "kafka-2:29093"],
@@ -24,6 +33,8 @@ consumer = KafkaConsumer(
 )
 
 
+# Основной цикл Consumer: получает batch сообщений, обрабатывает каждое
+# сообщение и после завершения batch фиксирует offsets.
 def run():
     try:
         while True:
@@ -45,6 +56,7 @@ def run():
 
                         messages_count += 1
 
+                    # Ошибка одного сообщения не останавливает Consumer.
                     except Exception:
                         logger.exception(
                             "Error while processing message: "
@@ -53,6 +65,7 @@ def run():
                             message.offset,
                         )
 
+            # После обработки всего batch фиксируем offsets.
             logger.info(
                 "Batch processed: %s messages. Committing offsets.",
                 messages_count,
