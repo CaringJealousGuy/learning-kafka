@@ -20,10 +20,11 @@ logger = logging.getLogger(__name__)
 # Auto commit включён: offsets автоматически фиксируются Kafka.
 consumer = KafkaConsumer(
     "messages",
-    bootstrap_servers=["kafka-1:29092", "kafka-2:29093"],
+    bootstrap_servers=["kafka-1:29092", "kafka-2:29092","kafka-3:29092"],
     group_id="single-consumer-group",
     auto_offset_reset="earliest",
     enable_auto_commit=True,
+    max_poll_records=1,
 )
 
 

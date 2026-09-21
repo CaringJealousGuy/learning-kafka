@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 # acks="all" и retries=5 обеспечивают At Least Once delivery:
 # Kafka подтверждает запись, а при ошибке Producer повторяет отправку.
 producer = KafkaProducer(
-    bootstrap_servers=["kafka-1:29092", "kafka-2:29093"],
+    bootstrap_servers=["kafka-1:29092", "kafka-2:29092","kafka-3:29092"],
     acks="all",
     retries=5,
 )

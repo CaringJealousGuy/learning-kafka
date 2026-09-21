@@ -18,12 +18,11 @@ logger = logging.getLogger(__name__)
 # auto_offset_reset="earliest" — при отсутствии сохранённого offset
 # начинать чтение с начала topic.
 # Auto commit отключён: offset подтверждается вручную после обработки batch.
-# max_poll_records ограничивает размер batch.
 # fetch_min_bytes и fetch_max_wait_ms позволяют настроить ожидание данных
 # перед получением batch.
 consumer = KafkaConsumer(
     "messages",
-    bootstrap_servers=["kafka-1:29092", "kafka-2:29093"],
+    bootstrap_servers=["kafka-1:29092", "kafka-2:29092","kafka-3:29092"],
     group_id="batch-consumer-group",
     auto_offset_reset="earliest",
     enable_auto_commit=False,
@@ -38,40 +37,42 @@ consumer = KafkaConsumer(
 def run():
     try:
         while True:
-            records = consumer.poll(timeout_ms=1000)
+            batch = []
 
-            if not records:
-                continue
+            # Накопление сообщений до размера batch.
+            # Один вызов poll() Kafka может вернуть меньше 10 сообщений,
+            # поэтому повторяем poll(), пока не накопим минимум 10.
+            while len(batch) < 10:
+                records = consumer.poll(timeout_ms=1000)
 
-            messages_count = 0
+                for records_from_partition in records.values():
+                    batch.extend(records_from_partition)
 
-            for records_from_partition in records.values():
-                for message in records_from_partition:
-                    try:
-                        received_message = deserialize_message(message.value)
+            # Обрабатываем накопленную пачку сообщений.
+            for message in batch:
+                try:
+                    received_message = deserialize_message(message.value)
 
-                        print(f"Received message: {received_message}")
+                    print(f"Received message: {received_message}")
 
-                        # Здесь позже будет обработка сообщения.
+                    # Здесь позже будет обработка сообщения.
 
-                        messages_count += 1
+                except Exception:
+                    logger.exception(
+                        "Error while processing message: "
+                        "partition=%s, offset=%s",
+                        message.partition,
+                        message.offset,
+                    )
 
-                    # Ошибка одного сообщения не останавливает Consumer.
-                    except Exception:
-                        logger.exception(
-                            "Error while processing message: "
-                            "partition=%s, offset=%s",
-                            message.partition,
-                            message.offset,
-                        )
-
-            # После обработки всего batch фиксируем offsets.
+            # После обработки всей пачки один раз синхронно
+            # фиксируем offsets.
             logger.info(
                 "Batch processed: %s messages. Committing offsets.",
-                messages_count,
+                len(batch),
             )
 
-            consumer.commit()
+            consumer.commit(asynchronous=False)
 
     except KeyboardInterrupt:
         logger.info("Consumer stopped by user")
