@@ -72,7 +72,7 @@ def run():
                 len(batch),
             )
 
-            consumer.commit(asynchronous=False)
+            consumer.commit()
 
     except KeyboardInterrupt:
         logger.info("Consumer stopped by user")
