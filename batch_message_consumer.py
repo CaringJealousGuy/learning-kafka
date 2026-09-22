@@ -72,7 +72,8 @@ def run():
                 len(batch),
             )
 
-            consumer.commit()
+            consumer.commit()  # Я использую библиотеку kafka-python в неё по умолчанию все коммиты идут синхроно, для асинохронной работы используется commit_async 
+                               # https://kafka-python.readthedocs.io/en/master/apidoc/KafkaConsumer.html
 
     except KeyboardInterrupt:
         logger.info("Consumer stopped by user")
