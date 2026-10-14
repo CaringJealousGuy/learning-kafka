@@ -233,6 +233,10 @@ pip install faust-streaming
 messages
 blocked_users
 filtered_messages
+
+docker exec -it kafka-1 /opt/kafka/bin/kafka-topics.sh --create --topic messages --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+docker exec -it kafka-1 /opt/kafka/bin/kafka-topics.sh --create --topic blocked_users --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+docker exec -it kafka-1 /opt/kafka/bin/kafka-topics.sh --create --topic filtered_messages --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
 ```
 
 Для текущей учебной конфигурации используется одна partition для основных topics и Faust Tables.
