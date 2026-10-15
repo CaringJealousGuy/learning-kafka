@@ -52,6 +52,9 @@ services:
     container_name: kafka-connect
     ports:
       - "8083:8083"
+      - "9404:9404"
+    volumes:
+      - ./jmx-exporter:/kafka-connect/jmx-exporter:ro
     depends_on:
       - kafka
       - postgres
@@ -64,7 +67,33 @@ services:
       CONFIG_STORAGE_REPLICATION_FACTOR: 1
       OFFSET_STORAGE_REPLICATION_FACTOR: 1
       STATUS_STORAGE_REPLICATION_FACTOR: 1
+      KAFKA_OPTS: "-javaagent:/kafka-connect/jmx-exporter/jmx_prometheus_javaagent.jar=9404:/kafka-connect/jmx-exporter/jmx-exporter-config.yml"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    depends_on:
+      - kafka-connect
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
 
 volumes:
   kafka_data:
   postgres_data:
+  prometheus_data:
+  grafana_data:
